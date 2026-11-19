@@ -9,3 +9,8 @@ dependencies = [
     "openai==2.44.0",
     "python-dotenv==1.1.0",
 ]
+
+[dependency-groups]
+dev = [
+    "autopep8>=2.3.2",
+]
