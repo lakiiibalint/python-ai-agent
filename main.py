@@ -3,8 +3,9 @@ from dotenv import load_dotenv
 from openai import OpenAI
 import argparse
 from prompts import system_prompt
-from call_function import available_functions
+from call_function import available_functions, call_function
 import json
+import sys
 
 
 def main():
@@ -34,29 +35,39 @@ def main():
     )
     # base_url is the server address,
     # and model is a parameter inside the request that picks which AI to use
-    response = client.chat.completions.create(
-        model="openrouter/free",
-        messages=messages,
-        tools=available_functions
-    )
+    
+    for _ in range(20):
+    
+        response = client.chat.completions.create(
+            model="openrouter/free",
+            messages=messages,
+            tools=available_functions
+        )
+        
+        if not response.usage:
+             raise RuntimeError("Failed Api request")
+        
 
-    if not response.usage:
-        raise RuntimeError("Failed Api request")
+        message = response.choices[0].message
+        messages.append(message)
 
-    if args.verbose:
-        print(f"User prompt: {args.user_prompt}")
-        print(f"Prompt tokens: {response.usage.prompt_tokens}")
-        print(f"Response tokens: {response.usage.completion_tokens}")
+        if args.verbose:
+            print(f"User prompt: {args.user_prompt}")
+            print(f"Prompt tokens: {response.usage.prompt_tokens}")
+            print(f"Response tokens: {response.usage.completion_tokens}")
 
-    message = response.choices[0].message
-
-    if message.tool_calls:
-        for tool_call in message.tool_calls:
-            function_args = json.loads(tool_call.function.arguments or "{}")
-            print(
-                f"Calling function: {tool_call.function.name}({function_args})")
+        if message.tool_calls:
+            for tool_call in message.tool_calls:
+                result = call_function(tool_call, args.verbose)
+                messages.append(result)
+                if args.verbose:
+                    print(result["content"])
+        else:
+            print(message.content)
+            break 
     else:
-        print(message.content)
+         print("Error: the agent hit the iteration limit without a final response.")
+         sys.exit(1) 
 
 
 if __name__ == "__main__":

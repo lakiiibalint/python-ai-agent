@@ -33,15 +33,16 @@ schema_get_file_content = {
     "type": "function",
     "function": {
         "name": "get_file_content",
-        "description": "Providing the content of a file, if the file is too large to read, returns where did it stop",
+        "description": "Reads and returns the text contents of a file (use this to read or show what is inside a file). Output is truncated at 10000 characters for large files",
         "parameters": {
             "type": "object",
             "properties": {
                 "file_path": {
                     "type": "string",
-                    "description": "File path to locate the desired file, relative to the working directory (default is the working directory itself)",
+                    "description": "Path of the file to read, relative to the working directory",
                 },
             },
+            "required": ["file_path"],
         },
     },
 }
